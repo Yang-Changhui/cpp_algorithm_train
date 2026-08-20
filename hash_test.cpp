@@ -15,6 +15,7 @@
 #include<unordered_set>
 #include<string>
 #include<algorithm>
+#include<utility>
 
 using namespace std;
 
@@ -262,26 +263,240 @@ int subarraySum(const vector<int>& nums,int k)
 
 int firstMissingPositive(vector<int>& nums)
 {
-    const int MAX = 100000;
+    const int n = static_cast<int>(nums.size());
 
-    vector<bool> v1(MAX+1,false);
+    vector<bool> v1(n+1,false);
 
 
     for(int num:nums)
     {
-        if(num<=0 || num>MAX)
+        if(num<=0 || num>n)
             continue;
 
         v1[num]=true;
     }
 
-
-    for(int i=1;i<=MAX;i++)
+    for(int i=1;i<=n;i++)
     {
         if(!v1[i])
             return i;
     }
 
+    return n+1;
+}
 
-    return MAX+1;
+int firstMissingPositive_1(vector<int>& nums)
+{
+    //原地哈希
+    int n =static_cast<int>(nums.size());
+    for(int i=0;i<n;++i)
+    {
+        while(nums[i]>=1 && nums[i]<=n && nums[i]!=nums[nums[i]-1])
+            swap(nums[i],nums[nums[i]-1]);
+    }
+    for(int i=0;i<n;++i)
+    {
+        if(nums[i]!=i+1)
+            return i+1;
+    }
+    return n+1;
+}
+
+/*
+========================
+       测试
+========================
+*/
+
+void printResult(const string& name, bool ok)
+{
+    cout << (ok ? "[PASS] " : "[FAIL] ") << name << endl;
+}
+
+void printVec(const vector<int>& v)
+{
+    cout << "[";
+    for(size_t i=0;i<v.size();++i)
+    {
+        cout << v[i];
+        if(i+1<v.size()) cout << ", ";
+    }
+    cout << "]";
+}
+
+void printVecStr(const vector<vector<string>>& vv)
+{
+    cout << "[";
+    for(size_t i=0;i<vv.size();++i)
+    {
+        cout << "[";
+        for(size_t j=0;j<vv[i].size();++j)
+        {
+            cout << "\"" << vv[i][j] << "\"";
+            if(j+1<vv[i].size()) cout << ", ";
+        }
+        cout << "]";
+        if(i+1<vv.size()) cout << ", ";
+    }
+    cout << "]";
+}
+
+int main()
+{
+    // 1. FindTarget —— Two Sum (暴力)
+    {
+        vector<int> nums = {2, 7, 11, 15};
+        int target = 9;
+        auto res = FindTarget(nums, target);
+        cout << "FindTarget([2,7,11,15], 9) = ";
+        printVec(res);
+        cout << endl;
+        printResult("FindTarget", res.size()==2 && nums[res[0]]+nums[res[1]]==target);
+    }
+    {
+        vector<int> nums = {3, 2, 4};
+        int target = 6;
+        auto res = FindTarget(nums, target);
+        cout << "FindTarget([3,2,4], 6) = ";
+        printVec(res);
+        cout << endl;
+        printResult("FindTarget", res.size()==2 && nums[res[0]]+nums[res[1]]==target);
+    }
+
+    // 2. FindTarget1 —— Two Sum (哈希)
+    {
+        vector<int> nums = {2, 7, 11, 15};
+        int target = 9;
+        auto res = FindTarget1(nums, target);
+        cout << "FindTarget1([2,7,11,15], 9) = ";
+        printVec(res);
+        cout << endl;
+        printResult("FindTarget1", res.size()==2 && nums[res[0]]+nums[res[1]]==target);
+    }
+    {
+        vector<int> nums = {3, 2, 4};
+        int target = 6;
+        auto res = FindTarget1(nums, target);
+        cout << "FindTarget1([3,2,4], 6) = ";
+        printVec(res);
+        cout << endl;
+        printResult("FindTarget1", res.size()==2 && nums[res[0]]+nums[res[1]]==target);
+    }
+
+    // 3. groupAnagrams
+    {
+        vector<string> strs = {"eat", "tea", "tan", "ate", "nat", "bat"};
+        auto res = groupAnagrams(strs);
+        cout << "groupAnagrams([eat,tea,tan,ate,nat,bat]) = ";
+        printVecStr(res);
+        cout << endl;
+        printResult("groupAnagrams", res.size()==3);
+    }
+
+    // 4. longestConsecutive
+    {
+        vector<int> nums = {100, 4, 200, 1, 3, 2};
+        int res = longestConsecutive(nums);
+        cout << "longestConsecutive([100,4,200,1,3,2]) = " << res << endl;
+        printResult("longestConsecutive", res==4);
+    }
+    {
+        vector<int> nums = {0, 3, 7, 2, 5, 8, 4, 6, 0, 1};
+        int res = longestConsecutive(nums);
+        cout << "longestConsecutive([0,3,7,2,5,8,4,6,0,1]) = " << res << endl;
+        printResult("longestConsecutive", res==9);
+    }
+
+    // 5. productExceptSelf
+    {
+        vector<int> nums = {1, 2, 3, 4};
+        auto res = productExceptSelf(nums);
+        cout << "productExceptSelf([1,2,3,4]) = ";
+        printVec(res);
+        cout << endl;
+        printResult("productExceptSelf", res==vector<int>{24,12,8,6});
+    }
+
+    // 6. productExceptSelf_2
+    {
+        vector<int> nums = {1, 2, 3, 4};
+        auto res = productExceptSelf_2(nums);
+        cout << "productExceptSelf_2([1,2,3,4]) = ";
+        printVec(res);
+        cout << endl;
+        printResult("productExceptSelf_2", res==vector<int>{24,12,8,6});
+    }
+
+    // 7. subarraySum
+    {
+        vector<int> nums = {1, 1, 1};
+        int k = 2;
+        int res = subarraySum(nums, k);
+        cout << "subarraySum([1,1,1], 2) = " << res << endl;
+        printResult("subarraySum", res==2);
+    }
+    {
+        vector<int> nums = {1, 2, 3};
+        int k = 3;
+        int res = subarraySum(nums, k);
+        cout << "subarraySum([1,2,3], 3) = " << res << endl;
+        printResult("subarraySum", res==2);
+    }
+
+    // 8. firstMissingPositive (vector<bool> 版本)
+    {
+        vector<int> nums = {1, 2, 0};
+        int res = firstMissingPositive(nums);
+        cout << "firstMissingPositive([1,2,0]) = " << res << endl;
+        printResult("firstMissingPositive v1", res==3);
+    }
+    {
+        vector<int> nums = {3, 4, -1, 1};
+        int res = firstMissingPositive(nums);
+        cout << "firstMissingPositive([3,4,-1,1]) = " << res << endl;
+        printResult("firstMissingPositive v1", res==2);
+    }
+    {
+        vector<int> nums = {7, 8, 9, 11, 12};
+        int res = firstMissingPositive(nums);
+        cout << "firstMissingPositive([7,8,9,11,12]) = " << res << endl;
+        printResult("firstMissingPositive v1", res==1);
+    }
+
+    // 9. firstMissingPositive_1 (原地哈希版本)
+    {
+        vector<int> nums = {1, 2, 0};
+        int res = firstMissingPositive_1(nums);
+        cout << "firstMissingPositive_1([1,2,0]) = " << res << endl;
+        printResult("firstMissingPositive_1", res==3);
+    }
+    {
+        vector<int> nums = {3, 4, -1, 1};
+        int res = firstMissingPositive_1(nums);
+        cout << "firstMissingPositive_1([3,4,-1,1]) = " << res << endl;
+        printResult("firstMissingPositive_1", res==2);
+    }
+    {
+        vector<int> nums = {7, 8, 9, 11, 12};
+        int res = firstMissingPositive_1(nums);
+        cout << "firstMissingPositive_1([7,8,9,11,12]) = " << res << endl;
+        printResult("firstMissingPositive_1", res==1);
+    }
+    {
+        // 额外测试：所有元素 1~n 都存在 → 返回 n+1
+        vector<int> nums = {3, 4, 2, 1};
+        int res = firstMissingPositive_1(nums);
+        cout << "firstMissingPositive_1([3,4,2,1]) = " << res << endl;
+        printResult("firstMissingPositive_1", res==5);
+    }
+    {
+        // 额外测试：空数组
+        vector<int> nums = {};
+        int res = firstMissingPositive_1(nums);
+        cout << "firstMissingPositive_1([]) = " << res << endl;
+        printResult("firstMissingPositive_1", res==1);
+    }
+
+    cout << "\n=== 所有测试完成 ===" << endl;
+    return 0;
 }
