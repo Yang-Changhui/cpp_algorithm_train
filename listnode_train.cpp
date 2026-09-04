@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include <unordered_map>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ ListNode* reverseList(ListNode* head) {
     ListNode* cur=head;
     while(cur!=nullptr)
     {
-        ListNode* next=cur.next;
+        ListNode* next=cur->next;
         cur->next=prev;
         prev=cur;
         cur=next;
@@ -119,4 +120,273 @@ ListNode* reverseBetween(ListNode* head, int left, int right) {
     }
 
     return dummy.next;
+}
+
+
+/*
+32. **LC 25 K 个一组翻转链表**｜Hard｜S｜分段操作
+给你链表的头节点 head ，每 k 个节点一组进行翻转，请你返回修改后的链表。
+
+k 是一个正整数，它的值小于或等于链表的长度。如果节点总数不是 k 的整数倍，
+那么请将最后剩余的节点保持原有顺序。
+
+你不能只是单纯的改变节点内部的值，而是需要实际进行节点交换。
+
+输入：head = [1,2,3,4,5], k = 2
+输出：[2,1,4,3,5]
+*/
+
+ListNode* reverseKGroup(ListNode* head, int k) {
+    ListNode dummy(0);
+    dummy.next = head;
+    ListNode* prev = &dummy;
+
+    while(true)
+    {
+        // 首先判断是否够k个
+        ListNode* kth = prev;
+        for(int i=0;i<k;++i)
+        {
+            kth=kth->next;
+            if(kth==nullptr)
+            {
+                return dummy.next;
+            }
+        }
+
+        ListNode* cur = prev->next;
+
+        for(int i=1;i<k;++i)
+        {
+            ListNode* next = cur->next;
+            cur->next=next->next;
+            next->next=prev->next;
+            prev->next=next;
+        }
+        prev=cur;
+    }
+}
+
+/*
+33. **LC 146 LRU 缓存**｜Medium｜S｜哈希 + 双向链表
+请你设计并实现一个满足  LRU (最近最少使用) 缓存 约束的数据结构。
+实现 LRUCache 类：
+LRUCache(int capacity) 以 正整数 作为容量 capacity 初始化 LRU 缓存
+int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。
+void put(int key, int value) 如果关键字 key 已经存在，则变更其数据值 value ；
+如果不存在，则向缓存中插入该组 key-value 。如果插入操作导致关键字数量超过 capacity ，则应该 逐出 最久未使用的关键字。
+函数 get 和 put 必须以 O(1) 的平均时间复杂度运行。
+
+示例：
+
+输入
+["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]
+[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]
+输出
+[null, null, null, 1, null, -1, null, -1, 3, 4]
+*/
+
+class LRUCache {
+private:
+    struct Node {
+        int key;
+        int value;
+        Node* prev;
+        Node* next;
+
+        Node(int k, int v)
+            : key(k), value(v), prev(nullptr), next(nullptr) {}
+    };
+
+    int capacity;
+    unordered_map<int, Node*> cache;
+    Node* head;
+    Node* tail;
+
+    void addToHead(Node* node) {
+        node->next = head->next;
+        node->prev = head;
+        head->next->prev = node;
+        head->next = node;
+    }
+
+    void removeNode(Node* node) {
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    }
+
+    void moveToHead(Node* node) {
+        removeNode(node);
+        addToHead(node);
+    }
+
+    Node* removeTail() {
+        Node* node = tail->prev;
+        removeNode(node);
+        return node;
+    }
+
+public:
+    explicit LRUCache(int capacity) : capacity(capacity) {
+        head = new Node(0, 0);
+        tail = new Node(0, 0);
+        head->next = tail;
+        tail->prev = head;
+    }
+
+    ~LRUCache() {
+        Node* cur = head;
+        while (cur != nullptr) {
+            Node* next = cur->next;
+            delete cur;
+            cur = next;
+        }
+    }
+
+    int get(int key) {
+        auto it = cache.find(key);
+        if (it == cache.end()) {
+            return -1;
+        }
+
+        Node* node = it->second;
+        moveToHead(node);
+        return node->value;
+    }
+
+    void put(int key, int value) {
+        auto it = cache.find(key);
+        if (it != cache.end()) {
+            Node* node = it->second;
+            node->value = value;
+            moveToHead(node);
+            return;
+        }
+
+        Node* node = new Node(key, value);
+        cache[key] = node;
+        addToHead(node);
+
+        if (static_cast<int>(cache.size()) > capacity) {
+            Node* removed = removeTail();
+            cache.erase(removed->key);
+            delete removed;
+        }
+    }
+};
+
+
+
+ListNode* buildList(const vector<int>& nums) {
+    ListNode dummy(0);
+    ListNode* tail = &dummy;
+    for (int x : nums) {
+        tail->next = new ListNode(x);
+        tail = tail->next;
+    }
+    return dummy.next;
+}
+
+vector<int> listToVector(ListNode* head) {
+    vector<int> result;
+    while (head != nullptr) {
+        result.push_back(head->val);
+        head = head->next;
+    }
+    return result;
+}
+
+void freeList(ListNode* head) {
+    while (head != nullptr) {
+        ListNode* next = head->next;
+        delete head;
+        head = next;
+    }
+}
+
+void printVector(const vector<int>& nums) {
+    cout << "[";
+    for (size_t i = 0; i < nums.size(); ++i) {
+        if (i > 0) cout << ",";
+        cout << nums[i];
+    }
+    cout << "]";
+}
+
+void checkListTest(const string& name, ListNode* head, const vector<int>& expected) {
+    vector<int> actual = listToVector(head);
+    cout << name << ": ";
+    printVector(actual);
+    cout << "  expected=";
+    printVector(expected);
+    cout << (actual == expected ? "  PASS\n" : "  FAIL\n");
+}
+
+int main() {
+    cout << "===== Linked List Tests =====\n";
+
+    {
+        ListNode* head = buildList({1, 2, 3, 4, 5});
+        head = reverseList(head);
+        checkListTest("reverseList", head, {5, 4, 3, 2, 1});
+        freeList(head);
+    }
+
+    {
+        ListNode* list1 = buildList({1, 2, 4});
+        ListNode* list2 = buildList({1, 3, 4});
+        ListNode* head = mergeTwoLists(list1, list2);
+        checkListTest("mergeTwoLists", head, {1, 1, 2, 3, 4, 4});
+        freeList(head);
+    }
+
+    {
+        ListNode* head = buildList({3, 2, 0, -4});
+        ListNode* second = head->next;
+        ListNode* tail = head;
+        while (tail->next != nullptr) tail = tail->next;
+        tail->next = second;
+        cout << "hasCycle(true): " << (hasCycle(head) ? "PASS" : "FAIL") << "\n";
+        tail->next = nullptr;
+        freeList(head);
+
+        head = buildList({1, 2, 3});
+        cout << "hasCycle(false): " << (!hasCycle(head) ? "PASS" : "FAIL") << "\n";
+        freeList(head);
+    }
+
+    {
+        ListNode* head = buildList({1, 2, 3, 4, 5});
+        head = reverseBetween(head, 2, 4);
+        checkListTest("reverseBetween", head, {1, 4, 3, 2, 5});
+        freeList(head);
+    }
+
+    {
+        ListNode* head = buildList({1, 2, 3, 4, 5});
+        head = reverseKGroup(head, 2);
+        checkListTest("reverseKGroup(k=2)", head, {2, 1, 4, 3, 5});
+        freeList(head);
+
+        head = buildList({1, 2, 3, 4, 5});
+        head = reverseKGroup(head, 3);
+        checkListTest("reverseKGroup(k=3)", head, {3, 2, 1, 4, 5});
+        freeList(head);
+    }
+
+    cout << "\n===== LRU Cache Tests =====\n";
+    {
+        LRUCache cache(2);
+        cache.put(1, 1);
+        cache.put(2, 2);
+        cout << "get(1) = " << cache.get(1) << " expected=1 " << (cache.get(1) == 1 ? "PASS" : "FAIL") << "\n";
+        cache.put(3, 3);
+        cout << "get(2) = " << cache.get(2) << " expected=-1 " << (cache.get(2) == -1 ? "PASS" : "FAIL") << "\n";
+        cache.put(4, 4);
+        cout << "get(1) = " << cache.get(1) << " expected=-1 " << (cache.get(1) == -1 ? "PASS" : "FAIL") << "\n";
+        cout << "get(3) = " << cache.get(3) << " expected=3 " << (cache.get(3) == 3 ? "PASS" : "FAIL") << "\n";
+        cout << "get(4) = " << cache.get(4) << " expected=4 " << (cache.get(4) == 4 ? "PASS" : "FAIL") << "\n";
+    }
+
+    return 0;
 }
