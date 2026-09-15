@@ -170,7 +170,7 @@ int orangesRotting(vector<vector<int>>& grid) {
         {1,0},
         {0,-1},
         {0,1}
-    }
+    };
 
     int minute=0;
     while(!q.empty() && fresh > 0)
@@ -547,4 +547,191 @@ vector<vector<int>> pacificAtlantic(vector<vector<int>>& heights) {
         }
     }
     return result;
+}
+
+/*
+49. **LC 1091 二进制矩阵中的最短路径**｜Medium｜A｜八邻域 BFS
+给你一个 n x n 的二进制矩阵 grid 中，返回矩阵中最短 畅通路径 的长度。如果不存在这样的路径，返回 -1 。
+
+二进制矩阵中的 畅通路径 是一条从 左上角 单元格（即，(0, 0)）到 右下角 单元格（即，(n - 1, n - 1)）的路径，该路径同时满足下述要求：
+
+路径途经的所有单元格的值都是 0 。
+路径中所有相邻的单元格应当在 8 个方向之一 上连通（即，相邻两单元之间彼此不同且共享一条边或者一个角）。
+畅通路径的长度 是该路径途经的单元格总数。
+输入：grid = [[0,1],[1,0]]
+输出：2
+*/
+int shortestPathBinaryMatrix(vector<vector<int>>& grid) {
+    if(grid.empty() || grid[0].empty())
+        return -1;
+    
+    int m=grid.size();
+    int n=grid[0].size();
+
+    if(grid[0][0] != 0 || grid[m-1][n-1] != 0)
+        return -1;
+
+    vector<vector<bool>> visited(m,vector<bool>(n,false));
+    vector<vector<int>> depth(m,vector<int>(n,0));
+    queue<pair<int,int>> q;
+    visited[0][0]=true;
+    q.push({0,0});
+    depth[0][0]=1;
+
+    int directions[8][2]={
+        {0,-1},
+        {-1,-1},
+        {-1,0},
+        {-1,1},
+        {0,1},
+        {1,1},
+        {1,0},
+        {1,-1}
+    };
+
+    while(!q.empty())
+    {
+        auto [x,y]=q.front();
+        q.pop();
+        for(int i=0;i<8;++i)
+        {
+            int nx=x+directions[i][0];
+            int ny=y+directions[i][1];
+            if(nx<0 || nx>=m || ny<0 || ny>=n)
+                continue;
+            if(visited[nx][ny])
+                continue;
+            if(grid[nx][ny]!=0)
+                continue;
+            visited[nx][ny]=true;
+            q.push({nx,ny});
+            depth[nx][ny]=depth[x][y]+1;
+        }
+    }
+    if(!visited[m-1][n-1])
+        return -1;
+    return depth[m-1][n-1];
+}
+
+// ==================== main 测试函数 ====================
+static void printIntMatrix(const vector<vector<int>>& matrix)
+{
+    cout << "[";
+    for(size_t i=0;i<matrix.size();++i)
+    {
+        if(i) cout << ",";
+        cout << "[";
+        for(size_t j=0;j<matrix[i].size();++j)
+        {
+            if(j) cout << ",";
+            cout << matrix[i][j];
+        }
+        cout << "]";
+    }
+    cout << "]";
+}
+
+static void printCharMatrix(const vector<vector<char>>& matrix)
+{
+    cout << "[";
+    for(size_t i=0;i<matrix.size();++i)
+    {
+        if(i) cout << ",";
+        cout << "[";
+        for(size_t j=0;j<matrix[i].size();++j)
+        {
+            if(j) cout << ",";
+            cout << "'" << matrix[i][j] << "'";
+        }
+        cout << "]";
+    }
+    cout << "]";
+}
+
+int main()
+{
+    // LC 200 岛屿数量
+    vector<vector<char>> grid200 = {
+        {'1','1','1','1','0'},
+        {'1','1','0','1','0'},
+        {'1','1','0','0','0'},
+        {'0','0','0','0','0'}
+    };
+    cout << "LC200: " << numIslands(grid200) << " (expected 1)\n";
+
+    // LC 695 岛屿的最大面积
+    vector<vector<int>> grid695 = {
+        {0,0,1,0,0,0,0,1,0,0,0,0,0},
+        {0,0,0,0,0,0,0,1,1,1,0,0,0},
+        {0,1,1,0,1,0,0,0,0,0,0,0,0},
+        {0,1,0,0,1,1,0,0,1,0,1,0,0},
+        {0,1,0,0,1,1,0,0,1,1,1,0,0},
+        {0,0,0,0,0,0,0,0,0,0,1,0,0},
+        {0,0,0,0,0,0,0,1,1,1,0,0,0},
+        {0,0,0,0,0,0,0,1,1,0,0,0,0}
+    };
+    cout << "LC695: " << maxAreaOfIsland(grid695) << " (expected 6)\n";
+
+    // LC 994 腐烂的橘子
+    vector<vector<int>> grid994 = {{2,1,1},{1,1,0},{0,1,1}};
+    cout << "LC994: " << orangesRotting(grid994) << " (expected 4)\n";
+
+    // LC 542 01 矩阵：原始方案
+    vector<vector<int>> mat542a = {{0,0,0},{0,1,0},{1,1,1}};
+    auto result542a = updateMatrix(mat542a);
+    cout << "LC542 original: ";
+    printIntMatrix(result542a);
+    cout << " (expected [[0,0,0],[0,1,0],[1,2,1]])\n";
+
+    // LC 542 01 矩阵：多源 BFS 优化方案
+    vector<vector<int>> mat542b = {{0,0,0},{0,1,0},{1,1,1}};
+    auto result542b = updateMatrix_optim(mat542b);
+    cout << "LC542 optim:    ";
+    printIntMatrix(result542b);
+    cout << " (expected [[0,0,0],[0,1,0],[1,2,1]])\n";
+
+    // LC 79 单词搜索
+    vector<vector<char>> board79 = {
+        {'A','B','C','E'},
+        {'S','F','C','S'},
+        {'A','D','E','E'}
+    };
+    cout << boolalpha;
+    cout << "LC79 ABCCED: " << exist(board79, "ABCCED") << " (expected true)\n";
+    cout << "LC79 ABCB:   " << exist(board79, "ABCB") << " (expected false)\n";
+
+    // LC 130 被围绕的区域
+    vector<vector<char>> board130 = {
+        {'X','X','X','X'},
+        {'X','O','O','X'},
+        {'X','X','O','X'},
+        {'X','O','X','X'}
+    };
+    solve(board130);
+    cout << "LC130: ";
+    printCharMatrix(board130);
+    cout << " (expected [['X','X','X','X'],['X','X','X','X'],['X','X','X','X'],['X','O','X','X']])\n";
+
+    // LC 417 太平洋大西洋水流问题
+    vector<vector<int>> heights417 = {
+        {1,2,2,3,5},
+        {3,2,3,4,4},
+        {2,4,5,3,1},
+        {6,7,1,4,5},
+        {5,1,1,2,4}
+    };
+    auto result417 = pacificAtlantic(heights417);
+    cout << "LC417: ";
+    printIntMatrix(result417);
+    cout << " (expected [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]])\n";
+
+    // LC 1091 二进制矩阵中的最短路径
+    vector<vector<int>> grid1091a = {{0,1},{1,0}};
+    cout << "LC1091 case1: " << shortestPathBinaryMatrix(grid1091a) << " (expected 2)\n";
+    vector<vector<int>> grid1091b = {{1}};
+    cout << "LC1091 case2: " << shortestPathBinaryMatrix(grid1091b) << " (expected -1)\n";
+    vector<vector<int>> grid1091c = {{0}};
+    cout << "LC1091 case3: " << shortestPathBinaryMatrix(grid1091c) << " (expected 1)\n";
+
+    return 0;
 }
