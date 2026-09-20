@@ -1,6 +1,8 @@
 #include<iostream>
 #include<vector>
 #include<algorithm>
+#include<string>
+#include<unordered_set>
 
 using namespace std;
 
@@ -22,7 +24,7 @@ using namespace std;
 int climbStairs(int n) {
     if(n<=0)
         return 0;
-    if(n==2)
+    if(n<=2)
         return n;
 
     vector<int> dp(n+1);
@@ -92,7 +94,7 @@ int coinChange(vector<int>& coins, int amount) {
         for(int coin:coins)
         {
             if(i>=coin)
-                dp[i]=min(dp[i],d[i-coin]+1);
+                dp[i]=min(dp[i],dp[i-coin]+1);
         }
     }
     return dp[amount]==amount+1?-1:dp[amount];
@@ -118,7 +120,7 @@ int lengthOfLIS(vector<int>& nums) {
     if(n==0)   
         return 0;
     vector<int> dp(n,1);
-    int result;
+    int result=1;
     for(int i=1;i<n;++i)
     {
         for(int j=0;j<i;++j)
@@ -179,7 +181,7 @@ int longestCommonSubsequence(string text1, string text2) {
     {
         for(int j=1;j<=m;++j)
         {
-            f(text1[i-1]==text2[j-1])
+            if(text1[i-1]==text2[j-1])
             {
                 dp[i][j]=dp[i-1][j-1]+1;
             }
@@ -229,9 +231,126 @@ int minDistance(string word1, string word2) {
             if(word1[i-1]==word2[j-1])
                 dp[i][j]=dp[i-1][j-1];
             else
-                dp[i][j]=min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1])+1;
+                dp[i][j]=min({dp[i-1][j],dp[i][j-1],dp[i-1][j-1]})+1;
         }
     }
     return dp[n][m];
 
+}
+
+
+/*
+73. **LC 139 单词拆分**｜Medium｜A｜序列 DP
+给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。
+
+注意：不要求字典中出现的单词全部都使用，并且字典中的单词可以重复使用。
+
+示例 1：
+
+输入: s = "leetcode", wordDict = ["leet", "code"]
+输出: true
+解释: 返回 true 因为 "leetcode" 可以由 "leet" 和 "code" 拼接成。
+
+*/
+
+bool wordBreak(string s, vector<string>& wordDict) {
+    // dp[i] = s 的前 i 个字符是否可以被成功拆分
+    unordered_set<string> dict(wordDict.begin(),wordDict.end());
+    int n=s.size();
+    vector<bool> dp(n+1,false);
+    dp[0]=true;
+    for(int i=1;i<=n;++i)
+    {
+        for(int j=0;j<i;j++)
+        {
+            if(dp[j] && dict.count(s.substr(j,i-j)) )
+            {
+                dp[i]=true;
+                break;  // 已经确定 dp[i] = true，没必要继续找
+            }
+        }
+    }
+    return dp[n];
+}
+
+/*
+74. **LC 312 戳气球**｜Hard｜A｜区间 DP
+有 n 个气球，编号为0 到 n - 1，每个气球上都标有一个数字，这些数字存在数组 nums 中。
+
+现在要求你戳破所有的气球。戳破第 i 个气球，你可以获得 nums[i - 1] * nums[i] * nums[i + 1] 枚硬币。 
+这里的 i - 1 和 i + 1 代表和 i 相邻的两个气球的序号。如果 i - 1或 i + 1 超出了数组的边界，那么就当它是一个数字为 1 的气球。
+
+求所能获得硬币的最大数量。
+
+示例 1：
+输入：nums = [3,1,5,8]
+输出：167
+解释：
+nums = [3,1,5,8] --> [3,5,8] --> [3,8] --> [8] --> []
+coins =  3*1*5    +   3*5*8   +  1*3*8  + 1*8*1 = 167
+*/
+
+int maxCoins(vector<int>& nums) {
+    // dp[i][j]:戳完 (i,j) 之间所有气球，最多能获得多少金币
+    vector<int> val;
+    val.push_back(1);
+    for(auto num:nums)
+        val.push_back(num);
+    val.push_back(1);
+    int n=val.size();
+
+    vector<vector<int>> dp(n,vector<int>(n,0));
+
+    //先小区间，再大区间
+    for(int len=2;len<n;++len)
+    {
+        for(int i=0;i+len<n;++i)
+        {
+            int j=i+len;
+            for(int k=i+1;k<j;++k)
+            {
+                dp[i][j]=max(dp[i][j],dp[i][k]+dp[k][j]+val[i]*val[k]*val[j]);
+            }
+        }
+    }
+
+    return dp[0][n-1];
+}
+
+int main() {
+    cout << boolalpha;
+
+    // LC 70 爬楼梯
+    cout << "climbStairs(2) = " << climbStairs(2) << " (expected 2)" << endl;
+    cout << "climbStairs(3) = " << climbStairs(3) << " (expected 3)" << endl;
+
+    // LC 198 打家劫舍
+    vector<int> robNums = {1, 2, 3, 1};
+    cout << "rob([1,2,3,1]) = " << rob(robNums) << " (expected 4)" << endl;
+
+    // LC 322 零钱兑换
+    vector<int> coins = {1, 2, 5};
+    cout << "coinChange([1,2,5], 11) = " << coinChange(coins, 11) << " (expected 3)" << endl;
+
+    // LC 300 最长递增子序列
+    vector<int> lisNums = {10, 9, 2, 5, 3, 7, 101, 18};
+    cout << "lengthOfLIS = " << lengthOfLIS(lisNums) << " (expected 4)" << endl;
+    cout << "lengthOfLIS_greedy = " << lengthOfLIS_greedy(lisNums) << " (expected 4)" << endl;
+
+    // LC 1143 最长公共子序列
+    cout << "longestCommonSubsequence(abcde, ace) = "
+         << longestCommonSubsequence("abcde", "ace") << " (expected 3)" << endl;
+
+    // LC 72 编辑距离
+    cout << "minDistance(horse, ros) = " << minDistance("horse", "ros") << " (expected 3)" << endl;
+
+    // LC 139 单词拆分
+    vector<string> wordDict = {"leet", "code"};
+    cout << "wordBreak(leetcode) = " << wordBreak("leetcode", wordDict) << " (expected true)" << endl;
+
+    // LC 312 戳气球
+    vector<int> balloons = {3, 1, 5, 8};
+    cout << "maxCoins([3,1,5,8]) = " << maxCoins(balloons) << " (expected 167)" << endl;
+
+    return 0;
 }
