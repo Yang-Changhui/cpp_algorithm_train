@@ -245,3 +245,83 @@ public:
         }
     }
 };
+// ==================== main 测试 ====================
+void printVector(const vector<int>& nums)
+{
+    cout << "[";
+    for (size_t i = 0; i < nums.size(); ++i)
+    {
+        if (i > 0) cout << ", ";
+        cout << nums[i];
+    }
+    cout << "]";
+}
+
+ListNode* buildList(const vector<int>& nums)
+{
+    ListNode dummy(0);
+    ListNode* tail = &dummy;
+    for (int num : nums)
+    {
+        tail->next = new ListNode(num);
+        tail = tail->next;
+    }
+    return dummy.next;
+}
+
+void printList(ListNode* head)
+{
+    while (head != nullptr)
+    {
+        cout << head->val;
+        if (head->next != nullptr) cout << "->";
+        head = head->next;
+    }
+    cout << endl;
+}
+
+void freeList(ListNode* head)
+{
+    while (head != nullptr)
+    {
+        ListNode* next = head->next;
+        delete head;
+        head = next;
+    }
+}
+
+int main()
+{
+    // LC 215 数组中的第 K 个最大元素
+    vector<int> nums1 = {3, 2, 1, 5, 6, 4};
+    cout << "LC215 findKthLargest: " << findKthLargest(nums1, 2) << " (expected 5)" << endl;
+    cout << "LC215 findKthLargest_2: " << findKthLargest_2(nums1, 2) << " (expected 5)" << endl;
+
+    // LC 347 前 K 个高频元素
+    vector<int> nums2 = {1, 1, 1, 2, 2, 3};
+    vector<int> topK = topKFrequent(nums2, 2);
+    cout << "LC347 topKFrequent: ";
+    printVector(topK);
+    cout << " (expected elements 1 and 2, order arbitrary)" << endl;
+
+    // LC 23 合并 K 个升序链表
+    vector<ListNode*> lists;
+    lists.push_back(buildList({1, 4, 5}));
+    lists.push_back(buildList({1, 3, 4}));
+    lists.push_back(buildList({2, 6}));
+    ListNode* merged = mergeKLists(lists);
+    cout << "LC23 mergeKLists: ";
+    printList(merged);
+    cout << "expected: 1->1->2->3->4->4->5->6" << endl;
+    freeList(merged);
+
+    // LC 295 数据流的中位数
+    MedianFinder medianFinder;
+    medianFinder.addNum(1);
+    medianFinder.addNum(2);
+    cout << "LC295 median after [1,2]: " << medianFinder.findMedian() << " (expected 1.5)" << endl;
+    medianFinder.addNum(3);
+    cout << "LC295 median after [1,2,3]: " << medianFinder.findMedian() << " (expected 2)" << endl;
+
+    return 0;
+}
